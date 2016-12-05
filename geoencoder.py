@@ -4,6 +4,8 @@ from IPython import embed
 import pandas as pd
 import numpy as np
 import threading
+from multiprocessing import Pool
+import time
 
 ProcNum = 20
 duration = 24*3600
@@ -32,10 +34,8 @@ i = list(idxs)
 for h in hist:
     i.remove(h)
 
-buf=[]
 
 def work(sel):
-    global buf
     xy = rawdata.ix[sel]
     try:
     	req = "http://api.map.baidu.com/geocoder/v2/?callback=renderReverse&location=%.6f,%.6f&output=json&pois=0&coordtype=wgs84ll&ak=NY7GUfWOHM3GRX2m75M1SXDAEYHG0Qmt" % (xy['lat'],xy['lon'])
@@ -43,35 +43,40 @@ def work(sel):
     	d = json.loads(raw[29:-1])
     	street = d['result']['addressComponent']['street']
         newdata = '%d,%s,%f,%f' % (sel, street, xy['lat'], xy['lon'])
-    	print newdata
+        return newdata
     except:
-        print "nodata", raw
-        return
-    buf.append(newdata)
-    return 
+        return None
+
+p = 300
 
 f = open('geo.csv','a') 
 for _ in range(len(i)):
-    threads=[]
-    for _ in range(16):
-        sel = np.random.choice(i)
-        i.remove(sel)
-        t = threading.Thread(target=work, args=(sel,))
-        threads.append(t)
-        t.start()
+    #threads=[]
+    t=time.time()
+    pool = Pool(p)
+    sel = np.random.choice(i, p, replace=False)
+    for s in sel:
+        i.remove(s)
+    buf = pool.map(work,sel)
+    pool.close()
+    pool.join()
+    #t = threading.Thread(target=work, args=(sel,))
+    #threads.append(t)
+    #t.start()
 
     print "joining"
-    main_thread = threading.currentThread()
-    for t in threading.enumerate():
-        if t is not main_thread:
-            t.join()
+    #main_thread = threading.currentThread()
+    #for t in threading.enumerate():
+    #    if t is not main_thread:
+    #        t.join()
 
     try:
 	f = open('geo.csv','a') 
     	for b in buf:
-            f.write((b+'\n').encode('utf-8'))
-	buf = []
+            print b
+            if b is not None: f.write((b+'\n').encode('utf-8'))
 	f.close()
     except:
         print "can't write"
         exit(0)
+    print p, 'takes', time.time() - t
