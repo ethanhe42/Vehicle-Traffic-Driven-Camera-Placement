@@ -24,22 +24,31 @@ lat_max=42
 mypath = 'geo.csv'
 rawdata=pd.read_csv(mypath,header=None,names=['id','road','lat','lon'])#,skip_blank_lines=True)
 outs=None
-for square_len in [1000,500,100,80,50,40,30,20,10]:
+risc=None
+for square_len in [1000,500,100,80,50,40,30,20,10][::-1]:
     block = square_decode(rawdata['lon'], rawdata['lat'],square_len=square_len )
     block.name=str(square_len)
     newdf = rawdata.join(block)
     newdf = newdf.dropna()
     roadgbblock = newdf['road'].groupby(newdf[block.name])
-    tmp = roadgbblock.nunique().value_counts()
+    tmpr = roadgbblock.nunique()
+    tmp = tmpr.value_counts()
     tmp.name=block.name
+    tmpr.name=block.name
     if outs is None:
         outs = pd.DataFrame(tmp)
+        risc = pd.DataFrame(tmpr)
     else:
-        outs = outs.join(tmp)
-outs.to_csv()
+        outs = outs.join(tmp, how='outer')
+        risc = risc.join(tmpr, how='outer')
+
+risc.boxplot(showfliers=False) ; plt.show()
+plt.savefig('50box.png')
+#embed()
+
+#outs.to_csv()
 cu = 5
 newouts = outs[outs.index<cu]
 newouts.loc[cu]=outs[outs.index>=cu].sum()
-embed()
 newouts.plot.bar()
 plt.savefig('50.png')
