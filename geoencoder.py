@@ -6,6 +6,18 @@ import numpy as np
 import threading
 from multiprocessing import Pool
 import time
+import sys
+import os
+import os.path as osp
+
+filename = 'geo.csv'
+if len(sys.argv) > 1:
+    start = int(sys.argv[1])
+    end = int(sys.argv[2])
+    filename +='.%d-%d' % (start, end)
+else:
+    start = None
+    end = None
 
 ProcNum = 20
 duration = 24*3600
@@ -29,16 +41,17 @@ rawdata = rawdata[ (rawdata.lon>lon_min) & (rawdata.lon<lon_max) & (rawdata.lat>
 hist = list(pd.read_csv('geo.csv', header=None, index_col=0).index)
 
 idxs = rawdata.index.copy()
-i = list(idxs)
+i = np.delete(idxs,hist)
+if start is not None:
+    i = i[(i>=start) & (i < end)]
+i = list(i)
 
-for h in hist:
-    i.remove(h)
-
-
+#8BPhSwUz2BBrcw8LqwQXXqkTVZG2zDx5
+#NY7GUfWOHM3GRX2m75M1SXDAEYHG0Qmt
 def work(sel):
     xy = rawdata.ix[sel]
     try:
-    	req = "http://api.map.baidu.com/geocoder/v2/?callback=renderReverse&location=%.6f,%.6f&output=json&pois=0&coordtype=wgs84ll&ak=NY7GUfWOHM3GRX2m75M1SXDAEYHG0Qmt" % (xy['lat'],xy['lon'])
+    	req = "http://api.map.baidu.com/geocoder/v2/?callback=renderReverse&location=%.6f,%.6f&output=json&pois=0&coordtype=wgs84ll&ak=8BPhSwUz2BBrcw8LqwQXXqkTVZG2zDx5" % (xy['lat'],xy['lon'])
     	raw = urllib2.urlopen(req).read()
     	d = json.loads(raw[29:-1])
     	street = d['result']['addressComponent']['street']
@@ -47,9 +60,9 @@ def work(sel):
     except:
         return None
 
-p = 300
+p = 30
 
-f = open('geo.csv','a') 
+f = open(filename,'a') 
 for _ in range(len(i)):
     #threads=[]
     t=time.time()
