@@ -42,8 +42,8 @@ for square_len in [1000,500,100,80,50,40,30,20,10][::-1]:
         outs = outs.join(tmp, how='outer')
         risc = risc.join(tmpr, how='outer')
 
-risc.boxplot(showfliers=False) ; plt.show()
-plt.savefig('50box.png')
+risc.boxplot(whis=100000)
+plt.savefig('50box.eps')
 #embed()
 
 #outs.to_csv()
@@ -51,4 +51,4 @@ cu = 5
 newouts = outs[outs.index<cu]
 newouts.loc[cu]=outs[outs.index>=cu].sum()
 newouts.plot.bar()
-plt.savefig('50.png')
+plt.savefig('50.eps')
