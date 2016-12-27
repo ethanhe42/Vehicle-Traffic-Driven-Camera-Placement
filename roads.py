@@ -25,6 +25,9 @@ mypath = 'geo.csv'
 rawdata=pd.read_csv(mypath,header=None,names=['id','road','lat','lon'])#,skip_blank_lines=True)
 outs=None
 risc=None
+allcsvpath = 'allgeo.csv'
+allcsv=[]
+
 for square_len in [1000,500,100,80,50,40,30,20,10][::-1]:
     block = square_decode(rawdata['lon'], rawdata['lat'],square_len=square_len )
     block.name=str(square_len)
@@ -33,6 +36,11 @@ for square_len in [1000,500,100,80,50,40,30,20,10][::-1]:
     roadgbblock = newdf['road'].groupby(newdf[block.name])
     tmpr = roadgbblock.nunique()
     tmp = tmpr.value_counts()
+    if 1:
+        allrest =  square_decode(np.array([115]),np.array([42]), square_len=square_len)[0]
+        rest = allrest - tmp.sum()
+        allcsv.append([square_len, rest,allrest, float(rest)/allrest])
+        
     tmp.name=block.name
     tmpr.name=block.name
     if outs is None:
@@ -41,6 +49,8 @@ for square_len in [1000,500,100,80,50,40,30,20,10][::-1]:
     else:
         outs = outs.join(tmp, how='outer')
         risc = risc.join(tmpr, how='outer')
+
+pd.DataFrame(allcsv, columns=['square', 'empty','all','percent']).to_csv(allcsvpath)
 
 risc.boxplot(whis=100000)
 plt.savefig('50box.eps')
@@ -51,4 +61,4 @@ cu = 5
 newouts = outs[outs.index<cu]
 newouts.loc[cu]=outs[outs.index>=cu].sum()
 newouts.plot.bar()
-plt.savefig('50.eps')
+jlt.savefig('50.eps')

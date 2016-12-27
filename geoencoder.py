@@ -46,12 +46,15 @@ if start is not None:
     i = i[(i>=start) & (i < end)]
 i = list(i)
 
+codes = ['NY7GUfWOHM3GRX2m75M1SXDAEYHG0Qmt', '8BPhSwUz2BBrcw8LqwQXXqkTVZG2zDx5'][::-1]
+codeidx = 0
 #8BPhSwUz2BBrcw8LqwQXXqkTVZG2zDx5
 #NY7GUfWOHM3GRX2m75M1SXDAEYHG0Qmt
 def work(sel):
     xy = rawdata.ix[sel]
     try:
-    	req = "http://api.map.baidu.com/geocoder/v2/?callback=renderReverse&location=%.6f,%.6f&output=json&pois=0&coordtype=wgs84ll&ak=8BPhSwUz2BBrcw8LqwQXXqkTVZG2zDx5" % (xy['lat'],xy['lon'])
+    	req = "http://api.map.baidu.com/geocoder/v2/?callback=renderReverse&location=%.6f,%.6f&output=json&pois=0&coordtype=wgs84ll&ak=" % (xy['lat'],xy['lon'])
+        req+=codes[codeidx]
     	raw = urllib2.urlopen(req).read()
     	d = json.loads(raw[29:-1])
     	street = d['result']['addressComponent']['street']
@@ -87,7 +90,11 @@ for _ in range(len(i)):
 	f = open('geo.csv','a') 
     	for b in buf:
             print b
-            if b is not None: f.write((b+'\n').encode('utf-8'))
+            if b is not None: 
+                f.write((b+'\n').encode('utf-8'))
+            else:
+                codeidx=(codeidx+1)%len(codes)
+                break
 	f.close()
     except:
         print "can't write"
