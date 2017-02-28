@@ -33,10 +33,10 @@ lat_max=42
 # In[ ]:
 
 rawdata=pd.DataFrame([])
-mypath=os.getcwd()+'\\taxigo.txt'
+mypath='taxigo.txt'
 #files=[join(mypath,f) for f in listdir(mypath) if isfile(join(mypath,f))]
 #for i in files:
-rawdata=pd.read_csv(mypath,header=False,names=['id','time','lon','lat'],skip_blank_lines=True)
+rawdata=pd.read_csv(mypath,header=None,names=['id','time','lon','lat'],skip_blank_lines=True)
     #if(folder==2):break
 rawdata=rawdata.dropna()
 rawdata=rawdata.drop('time',axis=1)
